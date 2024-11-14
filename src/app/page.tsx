@@ -9,8 +9,11 @@ export default function Home() {
   const handleSearch = async () => {
     setLoading(true);
     setMatches([]);
-    const res = await fetch(`/api/test?query=${query}`);
-    const data = await res.json();
+    const res = await fetch(`/api/test`, {
+      method: "POST",
+      body: JSON.stringify({ query })
+    });
+    const data = await res.json() as any;
     const m = data.matches.matches;
     setMatches(m);
     setLoading(false);
@@ -28,7 +31,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl">
-              {matches.map((m) => (
+              {matches.map((m: any) => (
                 <div key={m}>
                   <Image className="w-full" src={m.metadata.img_url} alt="image" width={500} height={500} />
                 </div>

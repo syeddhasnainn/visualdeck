@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
+export const runtime = 'edge';
 
-export async function GET(request: NextRequest) {
-  const userQuery = request.nextUrl.searchParams.get("query") || ""
-	const { env } = await getCloudflareContext();
+export async function POST(request: NextRequest) {
+  const { query } = await request.json() as any || { query: "" };
+  const { env } = await getCloudflareContext();
   const queryVector = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
-    text: userQuery,
+    text: query,
   });
 
   let matches = await env.VECTORIZE.query(queryVector.data[0], {
