@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-
-interface Env {
-    AI: Ai;
-  }
-  
-export const runtime = "edge";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 
-export async function GET(req:NextRequest,context: {env: Env}) {
-
-console.log('context', context.env.AI);
-  const answer = await context.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-    prompt: "What is the origin of the phrase 'Hello, World'",
+export async function GET(request: NextRequest) {
+  const userQuery = request.nextUrl.searchParams.get("query") || ""
+	const { env } = await getCloudflareContext();
+  const queryVector = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+    text: userQuery,
   });
-  return NextResponse.json({ answer });
+
+  let matches = await env.VECTORIZE.query(queryVector.data[0], {
+    topK: 10,
+    returnValues: false,
+    returnMetadata: "all"
+  })
+
+  return NextResponse.json({ matches });
 }

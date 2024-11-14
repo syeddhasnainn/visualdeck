@@ -14,7 +14,7 @@ assets = { directory = ".worker-next/assets", binding = "ASSETS" }
 
 [[vectorize]]
 binding = "VECTORIZE" # available in your Worker on env.VECTORIZE
-index_name = "index-visualdeck"
+index_name = "visualdeck-ind"
 
 [ai]
 binding = "AI"
