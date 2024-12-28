@@ -1,45 +1,65 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface SearchMatch {
+  metadata: {
+    img_url: string;
+  };
+}
+
 export default function Home() {
   const [userQuery, setUserQuery] = useState("");
-  const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [matches, setMatches] = useState<SearchMatch[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = async () => {
-    setLoading(true);
+    if (!userQuery.trim()) return;
+
+    setIsLoading(true);
     setMatches([]);
-    const res = await fetch(`/api/test`, {
-      method: "POST",
-      body: JSON.stringify({ userQuery })
-    });
-    const data = await res.json() as any;
-    const m = data.matches.matches;
-    setMatches(m);
-    setLoading(false);
-    setUserQuery("");
+
+    try {
+      const res = await fetch(`/api/test`, {
+        method: "POST",
+        body: JSON.stringify({ userQuery }),
+      });
+      const data = await res.json();
+      setMatches(data.matches.matches);
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      setIsLoading(false);
+      setUserQuery("");
+    }
   };
 
   return (
-    <div>
-      <div>
-        <div className="mx-auto max-w-[90%] my-8 flex flex-col gap-4">
-          <input onKeyDown={(e) => e.key === "Enter" && handleSearch()} value={userQuery} onChange={(e) => setUserQuery(e.target.value)} placeholder="Search for a frame" className="w-full outline-none border border-gray-600 rounded-xl p-2 bg-transparent" type="text" />
-          {loading ? (
-            <div className="flex justify-center my-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-600"></div>
+    <main className="bg-black">
+      <div className="max-w-7xl px-12 mx-auto flex flex-col items-center justify-between min-h-screen">
+        <div className="text-white overflow-auto">
+          <div className="grid grid-cols-2 gap-2">
+          {matches.map((match, index)=> (
+            <div>
+              <Image alt="search" src={match.metadata.img_url} width={1000} height={1000}/>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl">
-              {matches.map((m: any) => (
-                <div className="rounded-xl overflow-hidden" key={m}>
-                  <Image className="w-full" src={m.metadata.img_url} alt="image" width={500} height={500} />
-                </div>
-              ))}
-            </div>
-          )}
+            
+          ))}
+          </div>
+        </div>
+        <div className="fixed bottom-0 mb-4">
+          <input
+            value={userQuery}
+            onChange={(e) => setUserQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="Search for movie frames..."
+            type="text"
+            className="bg-white/10 min-w-[600px] backdrop-blur-lg border border-white/10 rounded-3xl p-4 text-white placeholder-white outline-none w-full shadow-lg shadow-black/20"
+          />
         </div>
       </div>
-    </div>
+    </main>
   );
 }
